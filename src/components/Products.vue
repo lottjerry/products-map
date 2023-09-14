@@ -17,7 +17,7 @@
       <v-card
         v-if="isCreate"
         title="Create a Product"
-        class="text-primary border df"
+        class="text-primary border"
         width="20%"
       >
         <!-- CREATE PRODUCT -->
@@ -53,7 +53,7 @@
       <v-card
         v-else-if="!update"
         title="Search for a Product"
-        class="text-primary border df"
+        class="text-primary border"
         width="20%"
       >
         <v-card-item
@@ -64,17 +64,27 @@
             class="pa-2"
           ></v-text-field
         ></v-card-item>
-        <v-card-item v-if="product"
-          ><div>Location: {{ product.location }}</div></v-card-item
-        >
-        <v-card-item v-if="product">
-          <v-btn @click="deleteProduct(product.upc)" color="red">
-            Delete
-          </v-btn>
-          <v-btn @click="toggleUpdate()" class="ml-5" color="green">
-            Update
-          </v-btn>
-        </v-card-item>
+        <div v-if="product && !loadingProduct">
+          <v-card-item
+            ><div>Location: {{ product.location }}</div></v-card-item
+          >
+          <v-card-item>
+            <v-btn @click="deleteProduct(product.upc)" color="red">
+              Delete
+            </v-btn>
+            <v-btn @click="toggleUpdate()" class="ml-5" color="green">
+              Update
+            </v-btn>
+          </v-card-item>
+        </div>
+        <div v-if="loadingProduct" class="d-flex justify-center pa-5">
+          <v-progress-circular
+            :size="70"
+            :width="7"
+            color="primary"
+            indeterminate
+          ></v-progress-circular>
+        </div>
         <v-container>
           <v-row class="justify-center pa-3">
             <v-btn
@@ -91,7 +101,7 @@
       <v-card
         v-if="update"
         title="Update Product"
-        class="text-primary border df"
+        class="text-primary border"
         width="20%"
       >
         <v-card-item
@@ -110,7 +120,16 @@
         </v-card-item>
       </v-card>
     </v-row>
-    <v-row class="justify-center" v-for="product in products" :key="product.id">
+    <!-- SHOW ALL PRODUCTS -->
+    <v-row v-if="loadingAllProducts" class="justify-center pa-5"
+      ><v-progress-circular
+        :size="200"
+        :width="20"
+        color="primary"
+        indeterminate
+      ></v-progress-circular
+    ></v-row>
+    <v-row v-else class="justify-center" v-for="product in products" :key="product.id">
       <div class="pa-5">UPC: {{ product.upc }}</div>
       <div class="pa-5">Location: {{ product.location }}</div>
     </v-row>
@@ -122,10 +141,12 @@ import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 
 const isCreate = ref(true);
+const loadingProduct = ref(null);
+const loadingAllProducts = ref(null);
 const update = ref(false);
 const products = ref([]);
 const upc = ref("");
-const updateLocation = ref('')
+const updateLocation = ref("");
 const product = ref("");
 const newProduct = ref({
   upc: "",
@@ -142,38 +163,46 @@ const toggleUpdate = () => {
 };
 
 const toggleCancel = () => {
-  update.value = false
-  updateLocation.value = ''
-}
+  update.value = false;
+  updateLocation.value = "";
+};
 
 // Get All Products when app Mount
 onMounted(() => {
+  loadingAllProducts.value = true;
   axios
     .get("https://products-api-putj.onrender.com/products")
-    .then((response) => (products.value = response.data.products));
+    .then((response) => {
+      products.value = response.data.products;
+      loadingAllProducts.value = false;
+    });
 });
 
 // Get a product by UPC
 const getProduct = (upc) => {
+  loadingProduct.value = true;
   axios
     .get(`https://products-api-putj.onrender.com/products/${upc}`)
-    .then((response) => (product.value = response.data.product));
+    .then((response) => {
+      product.value = response.data.product;
+      loadingProduct.value = false;
+    });
 };
 
 // Create a new Product
 const createProduct = () => {
   axios
     .post("https://products-api-putj.onrender.com/products", newProduct.value)
-    .then((response) => console.log(response.data.product))
+    .then((response) => console.log(response.data.product));
 };
 
 //Update a Product
 const updateProduct = (upc) => {
   axios
     .patch(`https://products-api-putj.onrender.com/products/${upc}`, {
-      location: updateLocation.value
+      location: updateLocation.value,
     })
-    .then(update.value = false);
+    .then((update.value = false));
 };
 // Delete a Product
 const deleteProduct = (upc) => {
@@ -186,10 +215,12 @@ const deleteProduct = (upc) => {
 watch(products, async (newProducts) => {
   // Do something when the products array changes
   console.log("Products array has changed:", newProducts);
-  
+
   // Refetch the products from the server
   try {
-    const response = await axios.get("https://products-api-putj.onrender.com/products");
+    const response = await axios.get(
+      "https://products-api-putj.onrender.com/products"
+    );
     products.value = response.data.products;
   } catch (error) {
     console.error("Error fetching products:", error);
