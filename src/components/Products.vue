@@ -118,7 +118,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, watch } from "vue";
 import axios from "axios";
 
 const isCreate = ref(true);
@@ -182,6 +182,19 @@ const deleteProduct = (upc) => {
     .then((response) => (product.value = response.data.product));
 };
 
+// Watch for changes in the products array
+watch(products, async (newProducts) => {
+  // Do something when the products array changes
+  console.log("Products array has changed:", newProducts);
+  
+  // Refetch the products from the server
+  try {
+    const response = await axios.get("https://products-api-putj.onrender.com/products");
+    products.value = response.data.products;
+  } catch (error) {
+    console.error("Error fetching products:", error);
+  }
+});
 </script>
 
 <style lang="scss" scoped></style>
