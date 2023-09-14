@@ -50,6 +50,7 @@
       >
         <v-card-item
           ><v-text-field
+          v-bind="upc"
             label="Enter UPC"
             variant="outlined"
             class="pa-2"
@@ -64,17 +65,31 @@
         </v-container>
       </v-card>
     </v-row>
+    <v-row class="justify-center" v-for="product in products" :key="product.id">
+      <div class="pa-5">UPC: {{ product.upc }}</div>
+      <div class="pa-5">Location: {{ product.location }}</div>
+    </v-row>
   </v-container>
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
+import axios from "axios";
 
 const isCreate = ref(true);
+const products = ref([]);
 
 const toggleisCreate = () => {
   isCreate.value = !isCreate.value;
 };
+
+
+onMounted(() => {
+  axios
+    .get("https://products-api-putj.onrender.com/products")
+    .then((response) => products.value = (response.data.products));
+});
+
 </script>
 
 <style lang="scss" scoped></style>
