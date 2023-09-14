@@ -50,15 +50,18 @@
       >
         <v-card-item
           ><v-text-field
-          v-bind="upc"
+            v-model="upc"
             label="Enter UPC"
             variant="outlined"
             class="pa-2"
           ></v-text-field
         ></v-card-item>
+        <v-card-item
+          ><div>Location: {{ product.location }}</div></v-card-item
+        >
         <v-container>
           <v-row class="justify-center pa-3">
-            <v-btn color="white" class="bg-primary justify-center" width="80%"
+            <v-btn @click="getProduct(upc)" color="white" class="bg-primary justify-center" width="80%"
               >Search</v-btn
             >
           </v-row>
@@ -78,18 +81,26 @@ import axios from "axios";
 
 const isCreate = ref(true);
 const products = ref([]);
+const upc = ref("");
+const product = ref("");
 
 const toggleisCreate = () => {
   isCreate.value = !isCreate.value;
 };
 
-
+// Get All Products when app Mount
 onMounted(() => {
   axios
     .get("https://products-api-putj.onrender.com/products")
-    .then((response) => products.value = (response.data.products));
+    .then((response) => (products.value = response.data.products));
 });
 
+// Get a product by UPC
+const getProduct = (upc) => {
+  axios
+    .get(`https://products-api-putj.onrender.com/products/${upc}`)
+    .then((response) => (product.value) = response.data.product);
+};
 </script>
 
 <style lang="scss" scoped></style>
