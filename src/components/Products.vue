@@ -212,9 +212,7 @@ const deleteProduct = (upc) => {
 };
 
 // Watch for changes in the products array
-watch(products, async (newProducts) => {
-  // Do something when the products array changes
-  console.log("Products array has changed:", newProducts);
+watch(products, async () => {
 
   // Refetch the products from the server
   try {
